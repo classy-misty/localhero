@@ -965,8 +965,14 @@ function loop(){
     bgX+=spd;
     updateRain();
     P.vy+=GR;P.y+=P.vy;
-    if(P.y>=GND-PH){P.y=GND-PH;P.vy=0;P.j=false;}
-    if(!P.j&&!P.dead){P.frt++;if(P.frt%7===0)P.fr=(P.fr+1)%4;}
+if(P.y>=GND-PH){P.y=GND-PH;P.vy=0;P.j=false;}
+
+if(!P.j&&!P.dead){
+  P.frt++;
+  if(P.frt%7===0) P.fr=(P.fr+1)%4;
+}
+
+// ── obstacle spawning (fixed) ──
 if(--nextOb <= 0){
   obs.push(mkOb());
 
