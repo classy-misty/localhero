@@ -967,8 +967,10 @@ function loop(){
     P.vy+=GR;P.y+=P.vy;
     if(P.y>=GND-PH){P.y=GND-PH;P.vy=0;P.j=false;}
     if(!P.j&&!P.dead){P.frt++;if(P.frt%7===0)P.fr=(P.fr+1)%4;}
-    if(--nextOb<=0){obs.push(mkOb());
-    if(Math.random() < 0.25){ 
+if(--nextOb <= 0){
+  obs.push(mkOb());
+
+  if(Math.random() < 0.25){
     // 25% chance: tight spacing
     nextOb = 38 + Math.floor(Math.random()*10); // 38–48
   } else {
