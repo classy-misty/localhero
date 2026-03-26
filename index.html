@@ -967,7 +967,7 @@ function loop(){
     P.vy+=GR;P.y+=P.vy;
     if(P.y>=GND-PH){P.y=GND-PH;P.vy=0;P.j=false;}
     if(!P.j&&!P.dead){P.frt++;if(P.frt%7===0)P.fr=(P.fr+1)%4;}
-    if(--nextOb<=0){obs.push(mkOb());nextOb=68+Math.floor(Math.random()*88);}
+    if(--nextOb<=0){obs.push(mkOb());nextOb=38+Math.floor(Math.random()*88);}
     obs.forEach(o=>o.x-=spd);obs=obs.filter(o=>o.x>-160);
     // tower pairs: spawn \|| then short gap, spawn /||, then long wait before next pair
     if(--nextTow<=0){
