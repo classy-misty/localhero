@@ -965,25 +965,10 @@ function loop(){
     bgX+=spd;
     updateRain();
     P.vy+=GR;P.y+=P.vy;
-if(P.y>=GND-PH){P.y=GND-PH;P.vy=0;P.j=false;}
-
-if(!P.j&&!P.dead){
-  P.frt++;
-  if(P.frt%7===0) P.fr=(P.fr+1)%4;
-}
-
-// ── obstacle spawning (fixed) ──
-if(--nextOb <= 0){
-  obs.push(mkOb());
-
-  if(Math.random() < 0.25){
-    // 25% chance: tight spacing
-    nextOb = 38 + Math.floor(Math.random()*10); // 38–48
-  } else {
-    // normal spacing
-    nextOb = 60 + Math.floor(Math.random()*90); // 60–150
-  }
-}
+    if(P.y>=GND-PH){P.y=GND-PH;P.vy=0;P.j=false;}
+    if(!P.j&&!P.dead){P.frt++;if(P.frt%7===0)P.fr=(P.fr+1)%4;}
+    if(--nextOb<=0){obs.push(mkOb());nextOb=68+Math.floor(Math.random()*88);}
+    obs.forEach(o=>o.x-=spd);obs=obs.filter(o=>o.x>-160);
     // tower pairs: spawn \|| then short gap, spawn /||, then long wait before next pair
     if(--nextTow<=0){
       const inPair=bgTow.length>0&&bgTow[bgTow.length-1].pairFirst;
@@ -1001,7 +986,7 @@ if(--nextOb <= 0){
     // cat companion — unlocks at 500 points, grows 1→2→3→4→5x every 500 after
     if(sc>=500&&!catUnlocked){
       catUnlocked=true;catScale=1;
-      popups.push({x:PX-20,y:P.y-20,text:'🐱 spoon!',life:0,color:'#F0C820'});
+      popups.push({x:PX-20,y:P.y-20,text:'🐱 a cat!',life:0,color:'#F0C820'});
     }
     if(catUnlocked){
       const newScale=Math.min(5,1+Math.floor((sc-500)/500));
