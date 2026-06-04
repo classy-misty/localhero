@@ -67,6 +67,7 @@ let leaderboard=[],submitting=false;
 let towSide=0;
 let popups=[],catUnlocked=false,catY=GND-18,catVY=0,catShown=false,catScale=1,bonusPts=0;
 let rainPhase=0,rainTick=0,rainAlpha=0,raindrops=[];
+let altPlayer=Math.random()<0.1; // rolled once at page load; ~1-in-10 sessions get the yellow guy
 const RAIN_DUR=[600,140,700,200];
 const P={y:GND-PH,vy:0,j:false,dead:false,fr:0,frt:0};
 
@@ -163,11 +164,12 @@ function reset(){
 }
 
 // ── OBSTACLES ──
-const OTYPES=['bike','cone','pigeon','spoon','bigdog','djacket','bgirl','prosecutor','judge'];
+const OTYPES=['bike','cone','pigeon','spoon','bigdog','djacket','bgirl','prosecutor','judge','elephant','surgeon'];
 const ODIMS={
   bike:{w:46,h:36},cone:{w:22,h:30},pigeon:{w:34,h:22},
   spoon:{w:36,h:14},bigdog:{w:68,h:46},djacket:{w:22,h:48},
-  bgirl:{w:24,h:44},prosecutor:{w:22,h:48},judge:{w:28,h:50}
+  bgirl:{w:24,h:44},prosecutor:{w:22,h:48},judge:{w:28,h:50},
+  elephant:{w:80,h:54},surgeon:{w:26,h:50}
 };
 const COLLECTIBLE={spoon:true};
 function mkOb(){
@@ -380,8 +382,99 @@ function drawTruss(){
   ctx.fillStyle='#3C4840';ctx.fillRect(0,GND,W,14);ctx.fillStyle='#222018';ctx.fillRect(0,GND,W,3);
 }
 
+// ── ALT PLAYER — yellow-outfit curly-haired smiling guy ──
+function drawAltPlayer(){
+  const x=PX,y=P.y,d=P.dead,f=P.fr,ls=d?0:Math.sin(f*Math.PI/1.5)*9;
+  ctx.lineCap='round';
+
+  // backpack (black)
+  ctx.fillStyle='#111111';ctx.fillRect(x-8,y+12,13,23);
+  ctx.fillStyle='#222222';ctx.fillRect(x-6,y+14,9,4);
+
+  // back leg — yellow pants
+  ctx.fillStyle='#E8C020';ctx.fillRect(x+13,y+30,8,16+Math.max(0,-ls));
+  ctx.fillStyle='#111111';ctx.fillRect(x+11,y+46+Math.max(0,-ls),10,4);
+
+  // shirt — yellow button-up
+  ctx.fillStyle='#F0D030';ctx.fillRect(x+2,y+13,22,19);
+  // button placket
+  ctx.strokeStyle='#C8A818';ctx.lineWidth=0.8;ctx.lineCap='butt';
+  ctx.beginPath();ctx.moveTo(x+13,y+13);ctx.lineTo(x+13,y+32);ctx.stroke();
+  // buttons
+  ctx.fillStyle='#C8A818';
+  [y+16,y+20,y+24,y+28].forEach(by=>{ctx.beginPath();ctx.arc(x+13,by,1,0,Math.PI*2);ctx.fill();});
+  // collar
+  ctx.fillStyle='#F0D030';
+  ctx.beginPath();ctx.moveTo(x+9,y+13);ctx.lineTo(x+13,y+18);ctx.lineTo(x+2,y+13);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(x+17,y+13);ctx.lineTo(x+13,y+18);ctx.lineTo(x+24,y+13);ctx.closePath();ctx.fill();
+
+  // front leg
+  ctx.fillStyle='#E8C020';ctx.fillRect(x+7,y+30,8,16+Math.max(0,ls));
+  ctx.fillStyle='#111111';ctx.fillRect(x+5,y+46+Math.max(0,ls),10,4);
+
+  // arms
+  ctx.strokeStyle='#DBBCAA';ctx.lineWidth=4;ctx.lineCap='round';
+  if(!d){
+    const as=Math.sin(f*Math.PI/1.5)*7;
+    ctx.beginPath();ctx.moveTo(x+5,y+18);ctx.lineTo(x-4,y+28+as);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+21,y+18);ctx.lineTo(x+28,y+28-as);ctx.stroke();
+  } else {
+    ctx.beginPath();ctx.moveTo(x+5,y+18);ctx.lineTo(x-5,y+22);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+21,y+18);ctx.lineTo(x+30,y+13);ctx.stroke();
+  }
+
+  // neck
+  ctx.fillStyle='#EDD8CC';ctx.fillRect(x+10,y+10,7,5);
+
+  // face
+  ctx.fillStyle='#F0DBD0';ctx.beginPath();ctx.arc(x+13,y+7,10,0,Math.PI*2);ctx.fill();
+
+  // curly brown hair — drawn as bumpy arc crown + side curls
+  ctx.fillStyle='#5C3010';
+  // main hair mass (back)
+  ctx.beginPath();
+  ctx.moveTo(x+3,y+7);
+  ctx.bezierCurveTo(x+1,y-1,x+5,y-6,x+9,y-5);
+  ctx.bezierCurveTo(x+11,y-8,x+15,y-8,x+17,y-5);
+  ctx.bezierCurveTo(x+21,y-6,x+25,y-1,x+23,y+7);
+  ctx.lineTo(x+3,y+7);ctx.closePath();ctx.fill();
+  // curly bumps on top
+  const curlCenters=[[x+7,y-4],[x+10,y-7],[x+13,y-8],[x+16,y-7],[x+19,y-4]];
+  curlCenters.forEach(([cx,cy])=>{ctx.beginPath();ctx.arc(cx,cy,3.5,0,Math.PI*2);ctx.fill();});
+  // hair crown crescent over face
+  ctx.beginPath();
+  ctx.moveTo(x+3,y+7);
+  ctx.bezierCurveTo(x+1,y-1,x+5,y-6,x+9,y-5);
+  ctx.bezierCurveTo(x+11,y-8,x+15,y-8,x+17,y-5);
+  ctx.bezierCurveTo(x+21,y-6,x+25,y-1,x+23,y+7);
+  ctx.bezierCurveTo(x+22,y+3,x+19,y+1,x+16,y+2);
+  ctx.bezierCurveTo(x+14,y+1,x+12,y+1,x+10,y+2);
+  ctx.bezierCurveTo(x+7,y+1,x+4,y+3,x+3,y+7);
+  ctx.closePath();ctx.fill();
+
+  // eyes
+  if(!d){
+    ctx.fillStyle='#0E0A06';ctx.beginPath();ctx.arc(x+9,y+8,2.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+17,y+8,2.3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#5A3090';ctx.beginPath();ctx.arc(x+9,y+8,1.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+17,y+8,1.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#080605';ctx.beginPath();ctx.arc(x+9,y+8,.85,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+17,y+8,.85,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.arc(x+9.6,y+7.3,.65,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+17.6,y+7.3,.65,0,Math.PI*2);ctx.fill();
+    // big smile
+    ctx.strokeStyle='#A06040';ctx.lineWidth=1.5;ctx.lineCap='round';
+    ctx.beginPath();ctx.arc(x+13,y+10,4,.2,Math.PI-.2);ctx.stroke();
+    // smile dimple lines
+    ctx.strokeStyle='rgba(160,90,60,.5)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x+9,y+12);ctx.lineTo(x+9.5,y+13.5);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+17,y+12);ctx.lineTo(x+16.5,y+13.5);ctx.stroke();
+  } else {
+    ctx.strokeStyle='#1A0F08';ctx.lineWidth=1.8;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(x+6,y+7);ctx.lineTo(x+11,y+11);ctx.moveTo(x+11,y+7);ctx.lineTo(x+6,y+11);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+15,y+7);ctx.lineTo(x+20,y+11);ctx.moveTo(x+20,y+7);ctx.lineTo(x+15,y+11);ctx.stroke();
+  }
+}
+
 // ── PLAYER ──
 function drawPlayer(){
+  if(altPlayer){drawAltPlayer();return;}
   const x=PX,y=P.y,d=P.dead,f=P.fr,ls=d?0:Math.sin(f*Math.PI/1.5)*9;
   ctx.lineCap='round';
 
@@ -727,6 +820,126 @@ function drawBike(x,y){
   ctx.lineWidth=1.8;ctx.strokeStyle='#FFE040';ctx.beginPath();ctx.moveTo(x+32,y+18);ctx.lineTo(x+39,y+13);ctx.stroke();ctx.beginPath();ctx.moveTo(x+32,y+18);ctx.lineTo(x+38,y+22);ctx.stroke();
 }
 
+// ── ELEPHANT ON FIRE (with smoke particles) ──
+let smokeParticles=[];
+function updateSmoke(ex,ey){
+  // spawn new smoke from elephant's back/head
+  if(Math.random()<0.35){
+    smokeParticles.push({x:ex+40+Math.random()*20,y:ey-10+Math.random()*10,vx:(Math.random()-.5)*0.6,vy:-(0.6+Math.random()*0.8),r:4+Math.random()*6,life:0,maxLife:40+Math.random()*30});
+  }
+  smokeParticles.forEach(s=>{s.x+=s.vx;s.y+=s.vy;s.life++;s.r+=0.08;});
+  smokeParticles=smokeParticles.filter(s=>s.life<s.maxLife);
+}
+function drawElephant(x,y){
+  updateSmoke(x,y);
+  // smoke particles (drawn behind elephant)
+  smokeParticles.forEach(s=>{
+    const a=Math.max(0,(1-s.life/s.maxLife)*0.55);
+    ctx.save();ctx.globalAlpha=a;
+    const g=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,s.r);
+    g.addColorStop(0,'#888');g.addColorStop(1,'rgba(80,80,80,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+  const ph=Math.sin(tick*.11);
+  const ex=x,ey=y;
+  // legs
+  const legColors=['#5A5A6A','#4E4E5E'];
+  [[ex+8,ey+34],[ex+20,ey+34],[ex+46,ey+34],[ex+58,ey+34]].forEach(([lx,ly],i)=>{
+    ctx.fillStyle=legColors[i%2];ctx.fillRect(lx,ly,11,20+(i%2===0?ph*3:-ph*3)|0);
+    ctx.fillStyle='#3A3A48';ctx.fillRect(lx-1,(ly+20+(i%2===0?ph*3:-ph*3))|0,13,4);
+  });
+  // body
+  ctx.fillStyle='#6A6A7A';ctx.beginPath();ctx.ellipse(ex+38,ey+32,30,20,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#5E5E6E';ctx.beginPath();ctx.ellipse(ex+38,ey+28,28,18,0,0,Math.PI*2);ctx.fill();
+  // fire on the body — animated flames
+  const ft=tick*.18;
+  function flame(fx,fy,fw,fh,phase){
+    ctx.save();ctx.globalAlpha=0.88;
+    const fg=ctx.createLinearGradient(fx,fy+fh,fx,fy-fh);
+    fg.addColorStop(0,'#FF4400');fg.addColorStop(0.5,'#FF9900');fg.addColorStop(1,'rgba(255,240,0,0)');
+    ctx.fillStyle=fg;
+    ctx.beginPath();
+    ctx.moveTo(fx-fw/2,fy+fh/2);
+    ctx.quadraticCurveTo(fx-fw/2+Math.sin(ft+phase)*fw*.4,fy,fx,fy-fh*.6+Math.sin(ft*1.3+phase)*fh*.2);
+    ctx.quadraticCurveTo(fx+fw/2+Math.sin(ft*.9+phase)*fw*.4,fy,fx+fw/2,fy+fh/2);
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+  flame(ex+28,ey+14,18,22,0);
+  flame(ex+42,ey+10,14,26,1.2);
+  flame(ex+55,ey+18,12,18,2.4);
+  flame(ex+18,ey+18,10,16,0.7);
+  // head
+  ctx.fillStyle='#6A6A7A';ctx.beginPath();ctx.arc(ex+14,ey+16,16,0,Math.PI*2);ctx.fill();
+  // ear
+  ctx.fillStyle='#7A7A8A';ctx.beginPath();ctx.ellipse(ex+2,ey+18,10,14,.3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#C89090';ctx.beginPath();ctx.ellipse(ex+2,ey+18,6,9,.3,0,Math.PI*2);ctx.fill();
+  // trunk
+  const trunkWag=Math.sin(tick*.13)*8;
+  ctx.strokeStyle='#5A5A6A';ctx.lineWidth=7;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(ex+4,ey+22);ctx.quadraticCurveTo(ex-10,ey+38+trunkWag,ex-4,ey+50);ctx.stroke();
+  ctx.strokeStyle='#6A6A7A';ctx.lineWidth=5;
+  ctx.beginPath();ctx.moveTo(ex+4,ey+22);ctx.quadraticCurveTo(ex-10,ey+38+trunkWag,ex-4,ey+50);ctx.stroke();
+  // tusk
+  ctx.strokeStyle='#EEE8C0';ctx.lineWidth=3;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(ex+4,ey+24);ctx.quadraticCurveTo(ex-6,ey+32,ex-10,ey+28);ctx.stroke();
+  // fire on head
+  flame(ex+10,ey+2,14,18,1.8);
+  // eye
+  ctx.fillStyle='#1A1010';ctx.beginPath();ctx.arc(ex+20,ey+14,3.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.8)';ctx.beginPath();ctx.arc(ex+21.5,ey+13,1.2,0,Math.PI*2);ctx.fill();
+  // tail
+  ctx.strokeStyle='#5A5A6A';ctx.lineWidth=3;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(ex+67,ey+24);ctx.quadraticCurveTo(ex+76,ey+30+Math.sin(tick*.14)*5,ex+74,ey+38);ctx.stroke();
+}
+
+// ── SURGEON IN SCRUBS WITH SCALPEL ──
+function drawSurgeon(x,y){
+  const ph=Math.sin(x*.07);
+  // legs — teal scrub pants
+  ctx.fillStyle='#2A7A82';ctx.fillRect(x+3,y+32,9,16+(ph*4|0));ctx.fillRect(x+14,y+32,9,16-(ph*4|0));
+  ctx.fillStyle='#1A5A62';ctx.fillRect(x+1,y+48+(ph*4|0),11,4);ctx.fillRect(x+12,y+48-(ph*4|0),11,4);
+  // scrub top — teal
+  ctx.fillStyle='#2A8A92';ctx.fillRect(x+2,y+14,22,20);
+  // V-neck
+  ctx.fillStyle='#EDD8CC';ctx.beginPath();ctx.moveTo(x+13,y+14);ctx.lineTo(x+9,y+20);ctx.lineTo(x+13,y+22);ctx.lineTo(x+17,y+20);ctx.closePath();ctx.fill();
+  // pocket on chest
+  ctx.strokeStyle='#1A6A72';ctx.lineWidth=1;ctx.lineCap='butt';ctx.strokeRect(x+16,y+17,6,5);
+  // surgical mask — covering lower face (white rectangle)
+  ctx.fillStyle='#E8EEF0';ctx.fillRect(x+5,y+9,16,8);
+  ctx.strokeStyle='#C0CBD0';ctx.lineWidth=0.8;ctx.strokeRect(x+5,y+9,16,8);
+  // mask ear straps
+  ctx.strokeStyle='#C0CBD0';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(x+5,y+10);ctx.lineTo(x+2,y+12);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x+21,y+10);ctx.lineTo(x+24,y+12);ctx.stroke();
+  // surgical cap — blue/teal
+  ctx.fillStyle='#1A5A7A';ctx.beginPath();ctx.arc(x+13,y+5,10,Math.PI,0,false);ctx.fill();ctx.fillRect(x+3,y+4,20,5);
+  ctx.fillStyle='#246090';ctx.fillRect(x+3,y+7,20,2);
+  // eyes above mask
+  ctx.fillStyle='#1A0808';ctx.beginPath();ctx.arc(x+9,y+8,1.8,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+17,y+8,1.8,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.85)';ctx.beginPath();ctx.arc(x+9.7,y+7.3,.7,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+17.7,y+7.3,.7,0,Math.PI*2);ctx.fill();
+  // arm holding scalpel (raised toward viewer)
+  const scalpelAngle=Math.sin(tick*.12)*0.18-.3;
+  ctx.strokeStyle='#2A8A92';ctx.lineWidth=5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x+22,y+19);ctx.lineTo(x+32,y+10);ctx.stroke();
+  // gloved hand
+  ctx.fillStyle='#7AC8C0';ctx.beginPath();ctx.arc(x+32,y+10,4,0,Math.PI*2);ctx.fill();
+  // scalpel handle (metal)
+  ctx.save();ctx.translate(x+32,y+10);ctx.rotate(scalpelAngle);
+  ctx.fillStyle='#C0C8C8';ctx.fillRect(-2,-16,4,12);
+  ctx.fillStyle='#A0AAAA';ctx.fillRect(-1,-16,2,12);
+  // scalpel blade — sharp triangular tip
+  ctx.fillStyle='#E8F0F0';ctx.beginPath();ctx.moveTo(-2,-16);ctx.lineTo(2,-16);ctx.lineTo(0.5,-28);ctx.lineTo(-0.5,-28);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=.7;ctx.lineCap='butt';
+  ctx.beginPath();ctx.moveTo(0,-17);ctx.lineTo(0.3,-27);ctx.stroke();
+  ctx.restore();
+  // other arm — at side
+  ctx.strokeStyle='#2A8A92';ctx.lineWidth=5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x+4,y+19);ctx.lineTo(x-4,y+30+ph*4);ctx.stroke();
+  ctx.fillStyle='#7AC8C0';ctx.beginPath();ctx.arc(x-4,(y+30+ph*4)|0,3.5,0,Math.PI*2);ctx.fill();
+}
+
 function drawObs(ob){
   const{x,y,t}=ob;ctx.lineCap='butt';
   if(t==='gap'){drawTower(x+ob.w/2,true,ob.w);return;}
@@ -736,6 +949,8 @@ function drawObs(ob){
   if(t==='bike'){drawBike(x,y);return;}
   if(t==='prosecutor'){drawProsecutor(x,y);return;}
   if(t==='judge'){drawJudge(x,y);return;}
+  if(t==='elephant'){drawElephant(x,y);return;}
+  if(t==='surgeon'){drawSurgeon(x,y);return;}
   if(t==='spoon'){
     // horizontal teal spoon — floats at mid height, glows slightly
     const sy=y+ob.h/2;
